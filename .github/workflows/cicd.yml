@@ -1,0 +1,31 @@
+name: React project Application Deploy aws
+
+on:
+    push:
+        branches:
+            - master
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Source
+              uses: actions/checkout@v4
+            - name: Login to docker hub
+              run:  docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+            - name: Build Docker Image
+              run:  docker build -t somgorai726/aws_react_app .
+            - name: Publish Image to Docker hub
+              run:  docker push somgorai726/aws_react_app:latest
+    
+    deploy:
+        needs: build
+        runs-on: self-hosted
+        steps:
+            - name: Pull image from docker hub
+              run:  docker pull somgorai726/aws_react_app:latest
+            - name: Delete old Container
+              run:  docker rm -f react-app-container  
+            - name: Run Docker Container
+              run:  docker run -d -p 3000:80 --name react-app-container somgorai726/aws_react_app 
+
+
